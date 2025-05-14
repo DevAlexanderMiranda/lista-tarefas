@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico do Sistema</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section h2 {
+            margin-top: 0;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .warning {
+            color: orange;
+        }
+        #console {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #3367d6;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Diagnóstico do Sistema de Tarefas</h1>
+    
+    <div class="section">
+        <h2>Status da Autenticação</h2>
+        <div id="auth-status">Verificando...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Documento do Usuário</h2>
+        <div id="user-doc">Verificando...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Índices do Firestore</h2>
+        <div id="indexes">Verificando...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Teste de Acesso às Tarefas</h2>
+        <div id="tasks-access">Verificando...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Console de Diagnóstico</h2>
+        <div id="console"></div>
+    </div>
+    
+    <div class="action-buttons">
+        <button id="logout-btn">Fazer Logout</button>
+        <button id="create-user-doc-btn">Criar/Atualizar Documento de Usuário</button>
+        <button id="create-task-btn">Criar Tarefa de Teste</button>
+        <button id="go-dashboard">Ir para Dashboard</button>
+        <button id="go-setup">Ir para Setup</button>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <!-- Configuração do Firebase -->
+    <script src="js/firebase-config.js"></script>
+    
+    <script>
+        // Console personalizado
+        const consoleElement = document.getElementById('console');
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function() {
+            const message = Array.from(arguments).join(' ');
+            const line = document.createElement('div');
+            line.textContent = `[LOG] ${message}`;
+            consoleElement.appendChild(line);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            originalConsoleLog.apply(console, arguments);
+        };
+        
+        console.error = function() {
+            const message = Array.from(arguments).join(' ');
+            const line = document.createElement('div');
+            line.style.color = 'red';
+            line.textContent = `[ERROR] ${message}`;
+            consoleElement.appendChild(line);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            originalConsoleError.apply(console, arguments);
+        };
+        
+        console.warn = function() {
+            const message = Array.from(arguments).join(' ');
+            const line = document.createElement('div');
+            line.style.color = 'orange';
+            line.textContent = `[WARN] ${message}`;
+            consoleElement.appendChild(line);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            originalConsoleWarn.apply(console, arguments);
+        };
+        
+        // Elementos DOM
+        const authStatusElement = document.getElementById('auth-status');
+        const userDocElement = document.getElementById('user-doc');
+        const indexesElement = document.getElementById('indexes');
+        const tasksAccessElement = document.getElementById('tasks-access');
+        const logoutBtn = document.getElementById('logout-btn');
+        const createUserDocBtn = document.getElementById('create-user-doc-btn');
+        const createTaskBtn = document.getElementById('create-task-btn');
+        const goDashboardBtn = document.getElementById('go-dashboard');
+        const goSetupBtn = document.getElementById('go-setup');
+        
+        // Verificar autenticação
+        function checkAuth() {
+            console.log('Verificando status de autenticação...');
+            
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    console.log('Usuário autenticado:', user.email);
+                    authStatusElement.innerHTML = `
+                        <p class="success">Autenticado como: ${user.email}</p>
+                        <p>UID: ${user.displayName || 'Não definido'}</p>
+                        <p>UID: ${user.uid}</p>
+                    `;
+                    
+                    // Verificar documento do usuário
+                    checkUserDocument(user.uid);
+                    
+                    // Verificar acesso às tarefas
+                    checkTasksAccess(user.uid);
+                } else {
+                    console.warn('Usuário não autenticado');
+                    authStatusElement.innerHTML = `
+                        <p class="error">Não autenticado</p>
+                        <p>Faça login para continuar</p>
+                    `;
+                    
+                    userDocElement.innerHTML = `<p class="error">Não disponível - usuário não autenticado</p>`;
+                    tasksAccessElement.innerHTML = `<p class="error">Não disponível - usuário não autenticado</p>`;
+                }
+            });
+        }
+        
+        // Verificar documento do usuário
+        async function checkUserDocument(uid) {
+            console.log('Verificando documento do usuário...');
+            
+            try {
+                const db = firebase.firestore();
+                const userDoc = await db.collection('users').doc(uid).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    console.log('Documento do usuário encontrado:', userData);
+                    
+                    userDocElement.innerHTML = `
+                        <p class="success">Documento encontrado</p>
+                        <p>Nome: ${userData.name || 'Não definido'}</p>
+                        <p>Email: ${userData.email || 'Não definido'}</p>
+                        <p>Função: ${userData.role || 'Não definida'}</p>
+                        <p>Criado em: ${userData.createdAt ? new Date(userData.createdAt.toDate()).toLocaleString() : 'Não definido'}</p>
+                    `;
+                } else {
+                    console.warn('Documento do usuário não encontrado');
+                    userDocElement.innerHTML = `
+                        <p class="error">Documento não encontrado</p>
+                        <p>O documento do usuário não existe na coleção 'users'</p>
+                        <p>Clique em "Criar/Atualizar Documento de Usuário" para criar</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao verificar documento do usuário:', error);
+                userDocElement.innerHTML = `
+                    <p class="error">Erro ao verificar documento</p>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        // Verificar acesso às tarefas
+        async function checkTasksAccess(uid) {
+            console.log('Verificando acesso às tarefas...');
+            
+            try {
+                const db = firebase.firestore();
+                
+                // Tentar buscar tarefas sem ordenação primeiro (teste simples)
+                const simpleQuery = await db.collection('tasks').where('userId', '==', uid).limit(1).get();
+                console.log('Consulta simples bem-sucedida');
+                
+                // Tentar a consulta completa com ordenação (que requer índice)
+                try {
+                    const fullQuery = await db.collection('tasks')
+                        .where('userId', '==', uid)
+                        .orderBy('createdAt', 'desc')
+                        .limit(1)
+                        .get();
+                    
+                    console.log('Consulta completa bem-sucedida, índice está funcionando');
+                    indexesElement.innerHTML = `<p class="success">Índice está configurado corretamente</p>`;
+                    
+                    if (fullQuery.empty) {
+                        tasksAccessElement.innerHTML = `
+                            <p class="warning">Nenhuma tarefa encontrada</p>
+                            <p>O usuário não tem tarefas. Clique em "Criar Tarefa de Teste" para criar uma.</p>
+                        `;
+                    } else {
+                        tasksAccessElement.innerHTML = `
+                            <p class="success">Tarefas encontradas e acessíveis</p>
+                            <p>O sistema pode acessar as tarefas do usuário.</p>
+                        `;
+                    }
+                } catch (indexError) {
+                    console.error('Erro na consulta completa (possível problema de índice):', indexError);
+                    
+                    if (indexError.message.includes('index')) {
+                        indexesElement.innerHTML = `
+                            <p class="error">Índice não configurado</p>
+                            <p>É necessário criar um índice composto para a consulta de tarefas.</p>
+                            <p>Mensagem: ${indexError.message}</p>
+                            ${indexError.message.includes('https://console.firebase') ? 
+                                `<p><a href="${indexError.message.match(/https:\/\/console\.firebase[^"'\s]*/)[0]}" target="_blank">Clique aqui para criar o índice</a></p>` : ''}
+                        `;
+                    } else {
+                        indexesElement.innerHTML = `
+                            <p class="error">Erro ao verificar índices</p>
+                            <p>${indexError.message}</p>
+                        `;
+                    }
+                    
+                    tasksAccessElement.innerHTML = `
+                        <p class="warning">Acesso parcial</p>
+                        <p>O sistema pode acessar tarefas com consultas simples, mas há problemas com consultas ordenadas.</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao verificar acesso às tarefas:', error);
+                tasksAccessElement.innerHTML = `
+                    <p class="error">Erro ao acessar tarefas</p>
+                    <p>${error.message}</p>
+                `;
+                indexesElement.innerHTML = `<p class="error">Não foi possível verificar índices</p>`;
+            }
+        }
+        
+        // Criar/atualizar documento do usuário
+        async function createUserDocument() {
+            console.log('Criando/atualizando documento do usuário...');
+            
+            try {
+                const user = firebase.auth().currentUser;
+                
+                if (!user) {
+                    console.error('Nenhum usuário autenticado');
+                    alert('Você precisa estar autenticado para criar um documento de usuário');
+                    return;
+                }
+                
+                const db = firebase.firestore();
+                await db.collection('users').doc(user.uid).set({
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                console.log('Documento do usuário criado/atualizado com sucesso');
+                alert('Documento do usuário criado/atualizado com sucesso');
+                
+                // Verificar novamente
+                checkUserDocument(user.uid);
+            } catch (error) {
+                console.error('Erro ao criar documento do usuário:', error);
+                alert(`Erro ao criar documento do usuário: ${error.message}`);
+            }
+        }
+        
+        // Criar tarefa de teste
+        async function createTestTask() {
+            console.log('Criando tarefa de teste...');
+            
+            try {
+                const user = firebase.auth().currentUser;
+                
+                if (!user) {
+                    console.error('Nenhum usuário autenticado');
+                    alert('Você precisa estar autenticado para criar uma tarefa');
+                    return;
+                }
+                
+                const db = firebase.firestore();
+                const taskRef = await db.collection('tasks').add({
+                    userId: user.uid,
+                    title: 'Tarefa de teste',
+                    description: 'Esta é uma tarefa de teste criada pelo diagnóstico.',
+                    responsible: user.displayName || user.email,
+                    startDate: new Date().toISOString().split('T')[0],
+                    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'in-progress',
+                    completed: false,
+                    subtasks: [
+                        {
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                            title: 'Subtarefa de teste',
+                            description: 'Esta é uma subtarefa de teste.',
+                            startDate: new Date().toISOString().split('T')[0],
+                            endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            status: 'in-progress',
+                            completed: false,
+                            communicationType: 'enviado'
+                        }
+                    ],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                console.log('Tarefa de teste criada com sucesso:', taskRef.id);
+                alert('Tarefa de teste criada com sucesso');
+                
+                // Verificar novamente
+                checkTasksAccess(user.uid);
+            } catch (error) {
+                console.error('Erro ao criar tarefa de teste:', error);
+                alert(`Erro ao criar tarefa de teste: ${error.message}`);
+            }
+        }
+        
+        // Fazer logout
+        async function logout() {
+            try {
+                await firebase.auth().signOut();
+                console.log('Logout realizado com sucesso');
+                alert('Logout realizado com sucesso');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert(`Erro ao fazer logout: ${error.message}`);
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            logoutBtn.addEventListener('click', logout);
+            createUserDocBtn.addEventListener('click', createUserDocument);
+            createTaskBtn.addEventListener('click', createTestTask);
+            goDashboardBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
+            goSetupBtn.addEventListener('click', () => window.location.href = 'setup.html');
+        });
+    </script>
+</body>
+</html> 

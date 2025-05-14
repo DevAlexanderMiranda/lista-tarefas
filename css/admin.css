@@ -1,0 +1,98 @@
+.user-welcome {
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: var(--light-text);
+}
+
+.user-welcome #user-name {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.users-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.user-card {
+    background-color: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.user-email {
+    color: var(--light-text);
+    font-size: 14px;
+}
+
+.user-role {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    margin-top: 5px;
+}
+
+.user-role.admin {
+    background-color: var(--primary-color);
+}
+
+.user-role.editor {
+    background-color: #f9a826;
+}
+
+.user-role.reader {
+    background-color: var(--success-color);
+}
+
+.user-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--light-text);
+}
+
+.form-group {
+    position: relative;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .user-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-actions {
+        margin-top: 10px;
+        align-self: flex-end;
+    }
+} 
