@@ -9,12 +9,6 @@ const loginBtnText = loginBtn.querySelector(".login-btn-text");
 const loginBtnLoader = loginBtn.querySelector(".login-btn-loader");
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Limpar qualquer dado de sessão anterior para garantir login limpo
-  localStorage.removeItem("user");
-  sessionStorage.removeItem("user");
-  localStorage.removeItem("adminEmail");
-  sessionStorage.removeItem("adminPassword");
-
   // Verificar se estamos vindo de um logout (pela URL)
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has("logout")) {
@@ -118,44 +112,21 @@ async function handleLogin(e) {
   showBtnLoading();
 
   try {
-    // Tentar fazer login com Firebase
-    await auth.signInWithEmailAndPassword(email, password);
+    // Usar a função login do auth.js em vez de duplicar a lógica
+    const user = await login(email, password);
 
-    // Login bem-sucedido
-    showSuccess("Login bem-sucedido! Redirecionando...");
-
-    // Manter o loader de carregamento e redirecionar
-    showBtnLoading("Redirecionando...");
-
-    // Verificar se o usuário tem documento no Firestore
-    const user = auth.currentUser;
     if (user) {
-      try {
-        const doc = await db.collection("users").doc(user.uid).get();
-        if (!doc.exists) {
-          console.log("Criando documento do usuário no Firestore...");
-          // Criar documento básico do usuário
-          await db
-            .collection("users")
-            .doc(user.uid)
-            .set({
-              name: user.displayName || user.email,
-              email: user.email,
-              role: "reader",
-              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            });
-          console.log("Documento do usuário criado com sucesso.");
-        }
-      } catch (firestoreError) {
-        console.error(
-          "Erro ao verificar/criar documento do usuário:",
-          firestoreError
-        );
-      }
-    }
+      // Login bem-sucedido
+      showSuccess("Login bem-sucedido! Redirecionando...");
 
-    // Redirecionar após um atraso para garantir que o Firestore tenha tempo de processar
-    redirectToDashboard();
+      // Manter o loader de carregamento e redirecionar
+      showBtnLoading("Redirecionando...");
+
+      // Redirecionar para o dashboard
+      redirectToDashboard();
+    } else {
+      throw new Error("Falha na autenticação");
+    }
   } catch (error) {
     console.error("Erro de login:", error);
 
@@ -180,15 +151,6 @@ async function handleLogin(e) {
 function showError(message) {
   loginError.textContent = message;
   loginError.style.color = "var(--danger-color)";
-  loginError.style.animation = "none";
-  loginError.offsetHeight; // Forçar reflow
-  loginError.style.animation = "fadeIn 0.3s ease";
-}
-
-// Função para mostrar mensagem de processamento
-function showProcessing(message) {
-  loginError.textContent = message;
-  loginError.style.color = "var(--primary-color)";
   loginError.style.animation = "none";
   loginError.offsetHeight; // Forçar reflow
   loginError.style.animation = "fadeIn 0.3s ease";

@@ -792,23 +792,20 @@ select.invalid:focus {
   }
 
   .header-right {
-    margin-top: 10px;
-    align-self: flex-end;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .header-buttons .btn {
     width: 100%;
-    justify-content: center;
   }
 
   .form-row {
     flex-direction: column;
-    gap: 8px;
   }
 
   .task-header {
     flex-direction: column;
-    gap: 8px;
   }
 
   .task-actions {
@@ -816,7 +813,17 @@ select.invalid:focus {
   }
 
   .modal-content {
-    width: 95%;
+    width: 90%;
+  }
+
+  .all-subtask-details {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .all-subtask-details {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1035,19 +1042,27 @@ select.invalid:focus {
 }
 
 .all-subtask-details {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, auto);
   gap: 12px;
-  width: 100%;
-  font-size: 14px;
-  margin-bottom: 8px;
+  margin-top: 8px;
+  align-items: center;
+  justify-content: start;
 }
 
-.all-subtask-date {
+.all-subtask-date,
+.all-subtask-status,
+.all-subtask-comm-type {
   display: flex;
   align-items: center;
   gap: 4px;
   color: var(--light-text);
+  white-space: nowrap;
+}
+
+.all-subtask-status .material-symbols-outlined,
+.all-subtask-comm-type .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .all-subtask-badges {
@@ -1335,34 +1350,6 @@ body.editing-subtask .subtasks-view {
 
 .task-card.filtered-in {
   animation: filterFadeIn 0.4s ease forwards;
-}
-
-/* Save indicator */
-.save-indicator {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 9999; /* Increased z-index to be on top of all elements */
-  transition: all 0.3s ease;
-  opacity: 0.9;
-}
-
-.save-indicator.success {
-  background-color: var(--success-color);
-}
-
-.save-indicator.error {
-  background-color: var(--danger-color);
-}
-
-.save-indicator.fade-out {
-  opacity: 0;
-  transform: translateY(-20px);
 }
 
 /* Animações para expandir/colapsar subtarefas */

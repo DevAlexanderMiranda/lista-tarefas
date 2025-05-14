@@ -184,13 +184,17 @@ async function addUser(user) {
             console.error(
               "Não estamos mais logados como admin após criar usuário"
             );
-            // Tentar reautenticar mais uma vez
+            // Tentar reautenticar mais uma vez usando a função do auth.js
             try {
-              await auth.signInWithEmailAndPassword(
-                localStorage.getItem("adminEmail"),
-                sessionStorage.getItem("adminPassword")
-              );
-              console.log("Reautenticação secundária concluída");
+              const adminEmail = localStorage.getItem("adminEmail");
+              const adminPassword = sessionStorage.getItem("adminPassword");
+
+              if (adminEmail && adminPassword) {
+                await login(adminEmail, adminPassword);
+                console.log("Reautenticação secundária concluída");
+              } else {
+                throw new Error("Credenciais de administrador não disponíveis");
+              }
             } catch (reAuthError) {
               console.error("Falha na reautenticação secundária:", reAuthError);
               alert(

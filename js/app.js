@@ -65,23 +65,54 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!userDoc.exists) {
       console.warn("Usuário autenticado mas sem documento no Firestore");
-      alert(
-        "Seu usuário não está configurado corretamente. Redirecionando para a página de configuração."
-      );
-      window.location.href = "setup.html";
-      return;
+      console.log("Criando documento do usuário automaticamente...");
+
+      // Criar documento do usuário automaticamente
+      try {
+        await db
+          .collection("users")
+          .doc(user.uid)
+          .set({
+            name: user.displayName || user.email.split("@")[0],
+            email: user.email,
+            role: "reader", // Usuário comum por padrão
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        console.log("Documento do usuário criado com sucesso.");
+
+        // Buscar novamente o documento recém-criado
+        const newUserDoc = await db.collection("users").doc(user.uid).get();
+        if (newUserDoc.exists) {
+          const userData = newUserDoc.data();
+          currentUser = {
+            id: user.uid,
+            email: user.email,
+            name: userData.name || user.displayName || user.email,
+            role: userData.role || "reader",
+          };
+          console.log("Usuário carregado após criação:", currentUser);
+        } else {
+          throw new Error("Falha ao verificar o documento criado");
+        }
+      } catch (error) {
+        console.error("Erro ao criar documento do usuário:", error);
+        alert(
+          "Erro ao configurar seu usuário. Por favor, recarregue a página ou entre em contato com o suporte."
+        );
+        return;
+      }
+    } else {
+      // Obter dados do usuário
+      const userData = userDoc.data();
+      currentUser = {
+        id: user.uid,
+        email: user.email,
+        name: userData.name || user.displayName || user.email,
+        role: userData.role || "reader",
+      };
+
+      console.log("Usuário carregado:", currentUser);
     }
-
-    // Obter dados do usuário
-    const userData = userDoc.data();
-    currentUser = {
-      id: user.uid,
-      email: user.email,
-      name: userData.name || user.displayName || user.email,
-      role: userData.role || "reader",
-    };
-
-    console.log("Usuário carregado:", currentUser);
 
     // Carregar tarefas e configurar a interface
     await loadTasks();
@@ -1017,8 +1048,8 @@ function expandSubtask(element, subtask) {
           // Coletar todos os dados atualizados das subtarefas
           const updatedSubtasks = getSubtasksFromModal();
 
-          // Apenas mostrar indicador de salvamento
-          showSaveIndicator("Salvando alterações...", "");
+          // Não mostrar mais o indicador de salvamento
+          // showSaveIndicator('Salvando alterações...', '');
 
           // Salvar as alterações sem mostrar erro se houver falha
           await saveSubtaskChanges(editingTask.id, updatedSubtasks).catch(
@@ -1028,8 +1059,8 @@ function expandSubtask(element, subtask) {
             }
           );
 
-          // Mostrar indicador de sucesso
-          showSaveIndicator("Subtarefa atualizada com sucesso!", "success");
+          // Não mostrar mais indicador de sucesso
+          // showSaveIndicator('Subtarefa atualizada com sucesso!', 'success');
         } catch (error) {
           console.error("Erro ao atualizar subtarefa:", error);
           // Não exibir alerta de erro, apenas log
@@ -1077,11 +1108,19 @@ function expandSubtask(element, subtask) {
             const updatedSubtasks = getSubtasksFromModal();
             saveSubtaskChanges(editingTask.id, updatedSubtasks)
               .then(() => {
-                showSaveIndicator("Subtarefa excluída com sucesso!", "success");
+                // Não mostrar mais este indicador
+                // showSaveIndicator('Subtarefa excluída com sucesso!', 'success');
+
+                // Fechar o modal de confirmação automaticamente
+                const confirmModal = document.querySelector(".confirm-modal");
+                if (confirmModal) {
+                  confirmModal.classList.remove("open");
+                }
               })
               .catch((error) => {
                 console.error("Erro ao excluir subtarefa:", error);
-                // Não mostrar erro ao usuário, apenas registrar no console
+                // Não mostrar mais este indicador
+                // showSaveIndicator('Erro ao excluir subtarefa. Por favor, tente novamente.', 'error');
               });
           }
         }, 280);
@@ -1933,12 +1972,6 @@ function createAllSubtaskElement(subtask) {
                 <span class="material-symbols-outlined">calendar_today</span>
                 <span>Início: ${startDate}</span>
             </div>
-            <div class="all-subtask-date ${
-              deadlineStatus ? `status-${deadlineStatus}` : ""
-            }">
-                <span class="material-symbols-outlined">event</span>
-                <span>Término: ${endDate}</span>
-            </div>
             <div class="all-subtask-status ${subtask.status}">
                 <span class="material-symbols-outlined">
                     ${
@@ -1952,6 +1985,12 @@ function createAllSubtaskElement(subtask) {
                     }
                 </span>
                 <span>${statusText}</span>
+            </div>
+            <div class="all-subtask-date ${
+              deadlineStatus ? `status-${deadlineStatus}` : ""
+            }">
+                <span class="material-symbols-outlined">event</span>
+                <span>Término: ${endDate}</span>
             </div>
             <div class="all-subtask-comm-type ${
               subtask.communicationType || "enviado"
@@ -2048,21 +2087,17 @@ function createAllSubtaskElement(subtask) {
               renderTasks();
 
               // Mostrar mensagem de sucesso
-              showSaveIndicator("Subtarefa excluída com sucesso!", "success");
+              // showSaveIndicator('Subtarefa excluída com sucesso!', 'success');
             } catch (error) {
               console.error("Erro ao excluir subtarefa:", error);
-              showSaveIndicator(
-                "Erro ao excluir subtarefa. Por favor, tente novamente.",
-                "error"
-              );
+              // Não mostrar erro ao usuário, apenas registrar no console
+              // showSaveIndicator('Erro ao excluir subtarefa. Por favor, tente novamente.', 'error');
             }
           }
         } catch (error) {
           console.error("Erro ao processar exclusão:", error);
-          showSaveIndicator(
-            "Erro ao processar exclusão. Por favor, tente novamente.",
-            "error"
-          );
+          // Não mostrar mais este indicador
+          // showSaveIndicator('Erro ao processar exclusão. Por favor, tente novamente.', 'error');
         }
       }
     );
@@ -2353,20 +2388,24 @@ async function saveSubtaskChanges(taskId, updatedSubtasks) {
     // Backup das subtarefas antigas para caso de erro
     const oldSubtasks = [...tasks[taskIndex].subtasks];
 
+    // Remover possíveis duplicatas antes de atualizar
+    const uniqueSubtasks = removeDuplicateSubtasks(updatedSubtasks);
+
     // Atualizar subtarefas localmente
-    tasks[taskIndex].subtasks = updatedSubtasks;
+    tasks[taskIndex].subtasks = uniqueSubtasks;
 
     try {
       // Atualizar no Firestore
       await db.collection("tasks").doc(taskId).update({
-        subtasks: updatedSubtasks,
+        subtasks: uniqueSubtasks,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
 
       console.log("Subtarefas atualizadas com sucesso");
 
       // Recarregar tarefas para garantir que todas as listas estejam atualizadas
-      await loadTasks();
+      // Comentando a linha abaixo para evitar que os dados sejam recarregados e possivelmente causem duplicações
+      // await loadTasks();
 
       // Atualizar UI
       renderTasks();
@@ -2389,43 +2428,4 @@ async function saveSubtaskChanges(taskId, updatedSubtasks) {
     console.error("Erro ao processar subtarefas:", error);
     throw error;
   }
-}
-
-// Função para mostrar indicador de salvamento
-function showSaveIndicator(message, type = "") {
-  // Remover qualquer indicador existente primeiro
-  const existingIndicators = document.querySelectorAll(".save-indicator");
-  existingIndicators.forEach((indicator) => {
-    if (indicator.parentNode) {
-      document.body.removeChild(indicator);
-    }
-  });
-
-  // Criar um novo indicador
-  const statusIndicator = document.createElement("div");
-  statusIndicator.className = "save-indicator";
-  if (type) {
-    statusIndicator.classList.add(type);
-  }
-
-  // Definir mensagem
-  statusIndicator.textContent = message;
-
-  // Garantir que o indicador esteja visível e no topo da pilha z-index
-  statusIndicator.style.opacity = "0.9";
-  statusIndicator.style.transform = "translateY(0)";
-
-  // Adicionar ao corpo do documento
-  document.body.appendChild(statusIndicator);
-
-  // Remover indicador após alguns segundos
-  clearTimeout(window.saveIndicatorTimeout);
-  window.saveIndicatorTimeout = setTimeout(() => {
-    statusIndicator.classList.add("fade-out");
-    setTimeout(() => {
-      if (statusIndicator.parentNode) {
-        document.body.removeChild(statusIndicator);
-      }
-    }, 500);
-  }, 2000);
 }
