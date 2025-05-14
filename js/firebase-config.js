@@ -6,7 +6,7 @@ const firebaseConfig = {
   storageBucket: "documentmanagement-23745.firebasestorage.app",
   messagingSenderId: "956045333838",
   appId: "1:956045333838:web:51f828a31fcd398c1d7a1f",
-  measurementId: "G-D42M0YRW4H"
+  measurementId: "G-D42M0YRW4H",
 };
 
 // Inicializar Firebase
@@ -19,9 +19,8 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Configurar persistência para funcionamento offline
-db.enablePersistence()
-  .catch(err => {
-    console.error("Erro ao habilitar persistência:", err);
-  });
+db.enablePersistence().catch((err) => {
+  console.error("Erro ao habilitar persistência:", err);
+});
 
-// Exportar para uso em outros arquivos 
+// Exportar para uso em outros arquivos

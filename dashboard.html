@@ -1,438 +1,495 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Tarefas</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
     <style>
-        .filters-container {
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-radius: var(--radius);
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
+      .filters-container {
+        background-color: var(--card-bg);
+        padding: 15px;
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .filter-item {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .subtask-filter-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .filter-badge {
+        display: flex;
+        align-items: center;
+        background-color: var(--secondary-color);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 13px;
+        gap: 5px;
+      }
+
+      .filter-badge .remove-filter {
+        cursor: pointer;
+        color: var(--danger-color);
+      }
+
+      .filter-stats {
+        font-size: 14px;
+        color: var(--light-text);
+        margin-top: 10px;
+        text-align: right;
+      }
+
+      /* Loading overlay styles */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      }
+
+      .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 5px solid var(--border-color);
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      .loading-message {
+        font-size: 18px;
+        color: var(--text-color);
+        margin-top: 15px;
+      }
+
+      .loading-logo {
+        font-size: 32px;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        
-        .filter-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+        100% {
+          transform: rotate(360deg);
         }
-        
-        .filter-item {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .subtask-filter-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .filter-badge {
-            display: flex;
-            align-items: center;
-            background-color: var(--secondary-color);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            gap: 5px;
-        }
-        
-        .filter-badge .remove-filter {
-            cursor: pointer;
-            color: var(--danger-color);
-        }
-        
-        .filter-stats {
-            font-size: 14px;
-            color: var(--light-text);
-            margin-top: 10px;
-            text-align: right;
-        }
-        
-        /* Loading overlay styles */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
-        }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid var(--border-color);
-            border-top: 5px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        .loading-message {
-            font-size: 18px;
-            color: var(--text-color);
-            margin-top: 15px;
-        }
-        
-        .loading-logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .fade-out {
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        /* Hide main content until loaded */
-        .content-container {
-            opacity: 0;
-            transition: opacity 0.5s ease-in;
-        }
-        
-        .content-loaded {
-            opacity: 1;
-        }
-        
-        /* Button loading animation */
-        .loading-spin {
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        
-        button.loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-        
-        /* User welcome style */
-        .user-welcome {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-left: 15px;
-        }
-        
-        /* Save indicator */
-        .save-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 1000;
-            transition: all 0.3s ease;
-            opacity: 0.9;
-        }
-        
-        .save-indicator.success {
-            background-color: var(--success-color);
-        }
-        
-        .save-indicator.error {
-            background-color: var(--danger-color);
-        }
-        
-        .save-indicator.fade-out {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        
-        /* Admin button style */
-        #admin-btn {
-            background-color: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s ease;
-        }
-        
-        #admin-btn:hover {
-            background-color: var(--primary-hover);
-        }
+      }
+
+      .fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      /* Hide main content until loaded */
+      .content-container {
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+      }
+
+      .content-loaded {
+        opacity: 1;
+      }
+
+      /* Button loading animation */
+      .loading-spin {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      button.loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      /* User welcome style */
+      .user-welcome {
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-left: 15px;
+      }
+
+      /* Save indicator */
+      .save-indicator {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+      }
+
+      .save-indicator.success {
+        background-color: var(--success-color);
+      }
+
+      .save-indicator.error {
+        background-color: var(--danger-color);
+      }
+
+      .save-indicator.fade-out {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      /* Admin button style */
+      #admin-btn {
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+      }
+
+      #admin-btn:hover {
+        background-color: var(--primary-hover);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Loading overlay -->
     <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-logo">Sistema de Tarefas</div>
-        <div class="loading-spinner"></div>
-        <div class="loading-message">Carregando dados...</div>
+      <div class="loading-logo">Sistema de Tarefas</div>
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Carregando dados...</div>
     </div>
 
     <div class="container content-container" id="content-container">
-        <header>
-            <div class="header-top">
-                <h1>Sistema de Tarefas</h1>
-                <div class="header-right">
-                    <button id="admin-btn" class="btn admin-only" title="Gerenciar Usuários" style="display: none;">
-                        <span class="material-symbols-outlined">admin_panel_settings</span>
-                    </button>
-                    <button id="logout-btn" class="btn" title="Sair">
-                        <span class="material-symbols-outlined">logout</span>
-                    </button>
-                    <button id="theme-toggle-btn" class="btn icon-btn" title="Alternar tema claro/escuro">
-                        <span class="material-symbols-outlined">dark_mode</span>
-                    </button>
-                    <!-- O elemento user-welcome será adicionado aqui via JavaScript -->
-                </div>
-            </div>
-            <div class="header-buttons">
-                <button id="view-subtasks-btn" class="btn secondary" title="Ver todas as subtarefas">
-                    <span class="material-symbols-outlined">checklist</span>
-                    Ver Subtarefas
-                </button>
-                <button id="add-task-btn" class="btn primary">
-                    <span class="material-symbols-outlined">add</span>
-                    Nova Tarefa
-                </button>
-            </div>
-            <div class="task-filter-container">
-                <div class="search-box">
-                    <span class="material-symbols-outlined">search</span>
-                    <input type="text" id="task-filter" placeholder="Filtrar tarefas por título...">
-                </div>
-            </div>
-        </header>
+      <header>
+        <div class="header-top">
+          <h1>Sistema de Tarefas</h1>
+          <div class="header-right">
+            <button
+              id="admin-btn"
+              class="btn admin-only"
+              title="Gerenciar Usuários"
+              style="display: none"
+            >
+              <span class="material-symbols-outlined"
+                >admin_panel_settings</span
+              >
+            </button>
+            <button id="logout-btn" class="btn" title="Sair">
+              <span class="material-symbols-outlined">logout</span>
+            </button>
+            <button
+              id="theme-toggle-btn"
+              class="btn icon-btn"
+              title="Alternar tema claro/escuro"
+            >
+              <span class="material-symbols-outlined">dark_mode</span>
+            </button>
+            <!-- O elemento user-welcome será adicionado aqui via JavaScript -->
+          </div>
+        </div>
+        <div class="header-buttons">
+          <button
+            id="view-subtasks-btn"
+            class="btn secondary"
+            title="Ver todas as subtarefas"
+          >
+            <span class="material-symbols-outlined">checklist</span>
+            Ver Subtarefas
+          </button>
+          <button id="add-task-btn" class="btn primary">
+            <span class="material-symbols-outlined">add</span>
+            Nova Tarefa
+          </button>
+        </div>
+        <div class="task-filter-container">
+          <div class="search-box">
+            <span class="material-symbols-outlined">search</span>
+            <input
+              type="text"
+              id="task-filter"
+              placeholder="Filtrar tarefas por título..."
+            />
+          </div>
+        </div>
+      </header>
 
-        <main>
-            <div id="subtasks-view" class="subtasks-view hidden">
-                <div class="view-header">
-                    <h2>Todas as Subtarefas</h2>
-                    <button id="close-subtasks-view" class="btn icon-btn">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-                
-                <div class="filters-container">
-                    <div class="filter-row">
-                        <div class="filter-item">
-                            <label for="parent-task-filter">Tarefa</label>
-                            <select id="parent-task-filter" class="filter-select">
-                                <option value="">Todas as tarefas</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="subtask-title-filter">Título da subtarefa</label>
-                            <input type="text" id="subtask-title-filter" placeholder="Buscar por título">
-                        </div>
-                        <div class="filter-item">
-                            <label for="subtask-description-filter">Objeto</label>
-                            <input type="text" id="subtask-description-filter" placeholder="Buscar no conteúdo">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-row">
-                        <div class="filter-item">
-                            <label for="status-filter">Status</label>
-                            <select id="status-filter" class="filter-select">
-                                <option value="">Todos os status</option>
-                                <option value="completed">Concluído</option>
-                                <option value="in-progress">Em andamento</option>
-                                <option value="partial">Parcial</option>
-                                <option value="no-response">Sem resposta</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="comm-type-filter">Tipo de comunicação</label>
-                            <select id="comm-type-filter" class="filter-select">
-                                <option value="">Todos os tipos</option>
-                                <option value="enviado">Enviado</option>
-                                <option value="recebido">Recebido</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="subtask-filter-badges" id="active-filters">
-                        <!-- Filtros ativos serão mostrados aqui -->
-                    </div>
-                    
-                    <div class="filter-stats">
-                        <span id="filtered-count">0</span> subtarefas encontradas
-                    </div>
-                </div>
-                
-                <div id="all-subtasks-container" class="all-subtasks-container"></div>
+      <main>
+        <div id="subtasks-view" class="subtasks-view hidden">
+          <div class="view-header">
+            <h2>Todas as Subtarefas</h2>
+            <button id="close-subtasks-view" class="btn icon-btn">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="filters-container">
+            <div class="filter-row">
+              <div class="filter-item">
+                <label for="parent-task-filter">Tarefa</label>
+                <select id="parent-task-filter" class="filter-select">
+                  <option value="">Todas as tarefas</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label for="subtask-title-filter">Título da subtarefa</label>
+                <input
+                  type="text"
+                  id="subtask-title-filter"
+                  placeholder="Buscar por título"
+                />
+              </div>
+              <div class="filter-item">
+                <label for="subtask-description-filter">Objeto</label>
+                <input
+                  type="text"
+                  id="subtask-description-filter"
+                  placeholder="Buscar no conteúdo"
+                />
+              </div>
             </div>
-            <div class="tasks-container" id="tasks-list"></div>
-        </main>
+
+            <div class="filter-row">
+              <div class="filter-item">
+                <label for="status-filter">Status</label>
+                <select id="status-filter" class="filter-select">
+                  <option value="">Todos os status</option>
+                  <option value="completed">Concluído</option>
+                  <option value="in-progress">Em andamento</option>
+                  <option value="partial">Parcial</option>
+                  <option value="no-response">Sem resposta</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label for="comm-type-filter">Tipo de comunicação</label>
+                <select id="comm-type-filter" class="filter-select">
+                  <option value="">Todos os tipos</option>
+                  <option value="enviado">Enviado</option>
+                  <option value="recebido">Recebido</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="subtask-filter-badges" id="active-filters">
+              <!-- Filtros ativos serão mostrados aqui -->
+            </div>
+
+            <div class="filter-stats">
+              <span id="filtered-count">0</span> subtarefas encontradas
+            </div>
+          </div>
+
+          <div id="all-subtasks-container" class="all-subtasks-container"></div>
+        </div>
+        <div class="tasks-container" id="tasks-list"></div>
+      </main>
     </div>
 
     <!-- Modal para adicionar/editar tarefa -->
     <div class="modal" id="task-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">Nova Tarefa</h2>
-                <button class="close-btn" id="close-modal">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="task-form">
-                    <input type="hidden" id="task-id">
-                    <div class="required-fields-message">Campos obrigatórios</div>
-                    <div class="form-group required-field">
-                        <label for="task-title">Título</label>
-                        <input type="text" id="task-title" required>
-                    </div>
-                    <div class="form-group required-field">
-                        <label for="task-description">Descrição</label>
-                        <textarea id="task-description" rows="3" required></textarea>
-                    </div>
-                    <div class="form-group required-field">
-                        <label for="task-responsible">Responsável</label>
-                        <input type="text" id="task-responsible" required>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group required-field">
-                            <label for="task-start-date">Data de Início</label>
-                            <input type="date" id="task-start-date" required>
-                        </div>
-                        <div class="form-group required-field">
-                            <label for="task-end-date">Data de Término</label>
-                            <input type="date" id="task-end-date" required>
-                        </div>
-                    </div>
-                    <div class="form-group required-field">
-                        <label for="task-status">Status</label>
-                        <select id="task-status" required>
-                            <option value="false" selected>Em andamento</option>
-                            <option value="true">Concluído</option>
-                            <option value="partial">Parcialmente Concluído</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <h3>Subtarefas</h3>
-                        <div id="subtasks-container"></div>
-                        <button type="button" id="add-subtask-btn" class="btn secondary">
-                            <span class="material-symbols-outlined">add</span>
-                            Adicionar Subtarefa
-                        </button>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary">Salvar</button>
-                        <button type="button" id="cancel-btn" class="btn">Cancelar</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Nova Tarefa</h2>
+          <button class="close-btn" id="close-modal">
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
+        <div class="modal-body">
+          <form id="task-form">
+            <input type="hidden" id="task-id" />
+            <div class="required-fields-message">Campos obrigatórios</div>
+            <div class="form-group required-field">
+              <label for="task-title">Título</label>
+              <input type="text" id="task-title" required />
+            </div>
+            <div class="form-group required-field">
+              <label for="task-description">Descrição</label>
+              <textarea id="task-description" rows="3" required></textarea>
+            </div>
+            <div class="form-group required-field">
+              <label for="task-responsible">Responsável</label>
+              <input type="text" id="task-responsible" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group required-field">
+                <label for="task-start-date">Data de Início</label>
+                <input type="date" id="task-start-date" required />
+              </div>
+              <div class="form-group required-field">
+                <label for="task-end-date">Data de Término</label>
+                <input type="date" id="task-end-date" required />
+              </div>
+            </div>
+            <div class="form-group required-field">
+              <label for="task-status">Status</label>
+              <select id="task-status" required>
+                <option value="false" selected>Em andamento</option>
+                <option value="true">Concluído</option>
+                <option value="partial">Parcialmente Concluído</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <h3>Subtarefas</h3>
+              <div id="subtasks-container"></div>
+              <button type="button" id="add-subtask-btn" class="btn secondary">
+                <span class="material-symbols-outlined">add</span>
+                Adicionar Subtarefa
+              </button>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn primary">Salvar</button>
+              <button type="button" id="cancel-btn" class="btn">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Modal de confirmação -->
     <div class="confirm-modal" id="confirm-modal">
-        <div class="confirm-modal-content">
-            <div class="confirm-modal-title">Confirmar ação</div>
-            <div class="confirm-modal-message" id="confirm-message">Tem certeza que deseja realizar esta ação?</div>
-            <div class="confirm-modal-actions">
-                <button id="confirm-cancel" class="btn">Cancelar</button>
-                <button id="confirm-ok" class="btn danger">Confirmar</button>
-            </div>
+      <div class="confirm-modal-content">
+        <div class="confirm-modal-title">Confirmar ação</div>
+        <div class="confirm-modal-message" id="confirm-message">
+          Tem certeza que deseja realizar esta ação?
         </div>
+        <div class="confirm-modal-actions">
+          <button id="confirm-cancel" class="btn">Cancelar</button>
+          <button id="confirm-ok" class="btn danger">Confirmar</button>
+        </div>
+      </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    
+
     <!-- Configuração e scripts da aplicação -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
-    
-    <script>
-        // Verificar se há problemas de inicialização do Firebase
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Verificando inicialização do Firebase...');
-            
-            // Verificar se o Firebase está inicializado corretamente
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase não está inicializado. Verifique os scripts.');
-                alert('Erro: Firebase não está inicializado. Verifique o console para mais detalhes.');
-                hideLoading(false); // Esconder loading com erro
-            } else {
-                console.log('Firebase inicializado com sucesso.');
-                
-                // Verificar se o usuário está autenticado
-                firebase.auth().onAuthStateChanged(user => {
-                    if (user) {
-                        console.log('Usuário autenticado:', user.email);
-                        
-                        // Verificar se o usuário tem um documento na coleção users
-                        firebase.firestore().collection('users').doc(user.uid).get()
-                            .then(doc => {
-                                if (!doc.exists) {
-                                    console.warn('Usuário autenticado mas sem documento no Firestore. Criando documento...');
-                                    
-                                    // Criar documento para o usuário com dados básicos
-                                    return firebase.firestore().collection('users').doc(user.uid).set({
-                                        name: user.displayName || user.email,
-                                        email: user.email,
-                                        role: 'reader', // Padrão para usuário recém-criado
-                                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                                    }).then(() => {
-                                        console.log('Documento do usuário criado com sucesso');
-                                        // Continuar o fluxo normal - o app.js cuidará do carregamento dos dados
-                                    });
-                                } else {
-                                    // O usuário está autenticado e tem um documento no Firestore
-                                    // O app.js irá cuidar do carregamento dos dados
-                                    // Não esconder o loading aqui, deixar para o app.js
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Erro ao verificar documento do usuário:', error);
-                                hideLoading(false); // Esconder loading com erro
-                            });
-                    } else {
-                        console.log('Usuário não autenticado.');
-                        window.location.href = 'index.html';
-                    }
-                });
-            }
-        });
 
-        // Função para esconder o loading
-        function hideLoading(success = true) {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const contentContainer = document.getElementById('content-container');
-            
-            if (loadingOverlay) {
-                loadingOverlay.classList.add('fade-out');
-                
-                if (success) {
-                    // Mostrar conteúdo principal com animação
-                    setTimeout(() => {
-                        contentContainer.classList.add('content-loaded');
-                    }, 300);
-                }
+    <script>
+      // Verificar se há problemas de inicialização do Firebase
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Verificando inicialização do Firebase...");
+
+        // Verificar se o Firebase está inicializado corretamente
+        if (typeof firebase === "undefined") {
+          console.error(
+            "Firebase não está inicializado. Verifique os scripts."
+          );
+          alert(
+            "Erro: Firebase não está inicializado. Verifique o console para mais detalhes."
+          );
+          hideLoading(false); // Esconder loading com erro
+        } else {
+          console.log("Firebase inicializado com sucesso.");
+
+          // Verificar se o usuário está autenticado
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              console.log("Usuário autenticado:", user.email);
+
+              // Verificar se o usuário tem um documento na coleção users
+              firebase
+                .firestore()
+                .collection("users")
+                .doc(user.uid)
+                .get()
+                .then((doc) => {
+                  if (!doc.exists) {
+                    console.warn(
+                      "Usuário autenticado mas sem documento no Firestore. Criando documento..."
+                    );
+
+                    // Criar documento para o usuário com dados básicos
+                    return firebase
+                      .firestore()
+                      .collection("users")
+                      .doc(user.uid)
+                      .set({
+                        name: user.displayName || user.email,
+                        email: user.email,
+                        role: "reader", // Padrão para usuário recém-criado
+                        createdAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
+                      })
+                      .then(() => {
+                        console.log("Documento do usuário criado com sucesso");
+                        // Continuar o fluxo normal - o app.js cuidará do carregamento dos dados
+                      });
+                  } else {
+                    // O usuário está autenticado e tem um documento no Firestore
+                    // O app.js irá cuidar do carregamento dos dados
+                    // Não esconder o loading aqui, deixar para o app.js
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    "Erro ao verificar documento do usuário:",
+                    error
+                  );
+                  hideLoading(false); // Esconder loading com erro
+                });
+            } else {
+              console.log("Usuário não autenticado.");
+              window.location.href = "index.html";
             }
+          });
         }
+      });
+
+      // Função para esconder o loading
+      function hideLoading(success = true) {
+        const loadingOverlay = document.getElementById("loading-overlay");
+        const contentContainer = document.getElementById("content-container");
+
+        if (loadingOverlay) {
+          loadingOverlay.classList.add("fade-out");
+
+          if (success) {
+            // Mostrar conteúdo principal com animação
+            setTimeout(() => {
+              contentContainer.classList.add("content-loaded");
+            }, 300);
+          }
+        }
+      }
     </script>
-</body>
-</html> 
+  </body>
+</html>

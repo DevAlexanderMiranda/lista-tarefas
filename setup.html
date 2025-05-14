@@ -1,230 +1,263 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Configuração do Firebase - Sistema de Tarefas</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css" />
     <style>
-        .setup-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .setup-card {
-            background-color: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .setup-title {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: var(--primary-color);
-        }
-        
-        .setup-step {
-            margin-bottom: 15px;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .setup-step::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--primary-color);
-        }
-        
-        .setup-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .console {
-            background-color: #1e1e1e;
-            color: #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: monospace;
-            height: 300px;
-            overflow-y: auto;
-            margin-top: 20px;
-        }
-        
-        .console-line {
-            margin: 5px 0;
-            line-height: 1.4;
-        }
-        
-        .console-error {
-            color: #ff6b6b;
-        }
-        
-        .console-success {
-            color: #69db7c;
-        }
-        
-        .console-info {
-            color: #4dabf7;
-        }
+      .setup-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .setup-card {
+        background-color: var(--card-bg);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .setup-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+      }
+
+      .setup-step {
+        margin-bottom: 15px;
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .setup-step::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: var(--primary-color);
+      }
+
+      .setup-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .console {
+        background-color: #1e1e1e;
+        color: #ddd;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: monospace;
+        height: 300px;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+
+      .console-line {
+        margin: 5px 0;
+        line-height: 1.4;
+      }
+
+      .console-error {
+        color: #ff6b6b;
+      }
+
+      .console-success {
+        color: #69db7c;
+      }
+
+      .console-info {
+        color: #4dabf7;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="setup-container">
-        <h1>Configuração do Firebase</h1>
-        
-        <div class="setup-card">
-            <h2 class="setup-title">Instruções</h2>
-            <div class="setup-step">Certifique-se de que você já está logado no sistema antes de continuar.</div>
-            <div class="setup-step">Este assistente irá configurar o Firebase Firestore para o Sistema de Tarefas.</div>
-            <div class="setup-step">Será criada uma estrutura de dados inicial com uma tarefa de exemplo.</div>
-            <div class="setup-step">Após a configuração, você poderá voltar para a página principal e começar a usar o sistema.</div>
-            
-            <div class="setup-buttons">
-                <button id="setup-btn" class="btn primary">Configurar Firebase</button>
-                <button id="back-btn" class="btn" onclick="window.location.href='dashboard.html'">Voltar para o Sistema</button>
-            </div>
+      <h1>Configuração do Firebase</h1>
+
+      <div class="setup-card">
+        <h2 class="setup-title">Instruções</h2>
+        <div class="setup-step">
+          Certifique-se de que você já está logado no sistema antes de
+          continuar.
         </div>
-        
-        <div class="setup-card">
-            <h2 class="setup-title">Console</h2>
-            <div id="console" class="console"></div>
+        <div class="setup-step">
+          Este assistente irá configurar o Firebase Firestore para o Sistema de
+          Tarefas.
         </div>
+        <div class="setup-step">
+          Será criada uma estrutura de dados inicial com uma tarefa de exemplo.
+        </div>
+        <div class="setup-step">
+          Após a configuração, você poderá voltar para a página principal e
+          começar a usar o sistema.
+        </div>
+
+        <div class="setup-buttons">
+          <button id="setup-btn" class="btn primary">
+            Configurar Firebase
+          </button>
+          <button
+            id="back-btn"
+            class="btn"
+            onclick="window.location.href='dashboard.html'"
+          >
+            Voltar para o Sistema
+          </button>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <h2 class="setup-title">Console</h2>
+        <div id="console" class="console"></div>
+      </div>
     </div>
-    
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    
+
     <!-- Configuração e scripts da aplicação -->
     <script src="js/firebase-config.js"></script>
-    
+
     <script>
-        // Console personalizado
-        const consoleElement = document.getElementById('console');
-        
-        // Sobrescrever console.log para exibir no elemento
-        const originalConsoleLog = console.log;
-        const originalConsoleError = console.error;
-        const originalConsoleInfo = console.info;
-        
-        console.log = function() {
-            const line = document.createElement('div');
-            line.className = 'console-line';
-            line.textContent = Array.from(arguments).join(' ');
-            consoleElement.appendChild(line);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-            originalConsoleLog.apply(console, arguments);
-        };
-        
-        console.error = function() {
-            const line = document.createElement('div');
-            line.className = 'console-line console-error';
-            line.textContent = Array.from(arguments).join(' ');
-            consoleElement.appendChild(line);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-            originalConsoleError.apply(console, arguments);
-        };
-        
-        console.info = function() {
-            const line = document.createElement('div');
-            line.className = 'console-line console-info';
-            line.textContent = Array.from(arguments).join(' ');
-            consoleElement.appendChild(line);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-            originalConsoleInfo.apply(console, arguments);
-        };
-        
-        // Função para configurar o Firestore
-        async function setupFirestore() {
-            try {
-                console.log('Iniciando configuração do Firestore...');
-                
-                // Verificar se o usuário atual está autenticado
-                const currentUser = firebase.auth().currentUser;
-                if (!currentUser) {
-                    console.error('Usuário não autenticado. Faça login primeiro.');
-                    return;
-                }
-                
-                console.log('Usuário autenticado:', currentUser.email);
-                
-                // Verificar se o usuário já tem um documento na coleção users
-                const db = firebase.firestore();
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                
-                if (!userDoc.exists) {
-                    // Criar documento de usuário se não existir
-                    await db.collection('users').doc(currentUser.uid).set({
-                        name: currentUser.displayName || currentUser.email.split('@')[0],
-                        email: currentUser.email,
-                        role: 'admin', // O primeiro usuário é admin por padrão
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    console.log('Documento de usuário criado com sucesso.');
-                } else {
-                    console.log('Documento de usuário já existe.');
-                }
-                
-                // Criar uma tarefa de exemplo para testar
-                const taskRef = await db.collection('tasks').add({
-                    userId: currentUser.uid,
-                    title: 'Tarefa de exemplo',
-                    description: 'Esta é uma tarefa de exemplo criada automaticamente.',
-                    responsible: currentUser.displayName || currentUser.email,
-                    startDate: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
-                    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Data atual + 7 dias
-                    status: 'in-progress',
-                    completed: false,
-                    subtasks: [
-                        {
-                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                            title: 'Subtarefa de exemplo',
-                            description: 'Esta é uma subtarefa de exemplo.',
-                            startDate: new Date().toISOString().split('T')[0],
-                            endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Data atual + 3 dias
-                            status: 'in-progress',
-                            completed: false,
-                            communicationType: 'enviado'
-                        }
-                    ],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                console.log('Tarefa de exemplo criada com ID:', taskRef.id);
-                console.log('Configuração do Firestore concluída com sucesso!');
-                console.log('Agora você pode voltar para a página principal e começar a usar o sistema.');
-                
-            } catch (error) {
-                console.error('Erro ao configurar o Firestore:', error);
-            }
+      // Console personalizado
+      const consoleElement = document.getElementById("console");
+
+      // Sobrescrever console.log para exibir no elemento
+      const originalConsoleLog = console.log;
+      const originalConsoleError = console.error;
+      const originalConsoleInfo = console.info;
+
+      console.log = function () {
+        const line = document.createElement("div");
+        line.className = "console-line";
+        line.textContent = Array.from(arguments).join(" ");
+        consoleElement.appendChild(line);
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+        originalConsoleLog.apply(console, arguments);
+      };
+
+      console.error = function () {
+        const line = document.createElement("div");
+        line.className = "console-line console-error";
+        line.textContent = Array.from(arguments).join(" ");
+        consoleElement.appendChild(line);
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+        originalConsoleError.apply(console, arguments);
+      };
+
+      console.info = function () {
+        const line = document.createElement("div");
+        line.className = "console-line console-info";
+        line.textContent = Array.from(arguments).join(" ");
+        consoleElement.appendChild(line);
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+        originalConsoleInfo.apply(console, arguments);
+      };
+
+      // Função para configurar o Firestore
+      async function setupFirestore() {
+        try {
+          console.log("Iniciando configuração do Firestore...");
+
+          // Verificar se o usuário atual está autenticado
+          const currentUser = firebase.auth().currentUser;
+          if (!currentUser) {
+            console.error("Usuário não autenticado. Faça login primeiro.");
+            return;
+          }
+
+          console.log("Usuário autenticado:", currentUser.email);
+
+          // Verificar se o usuário já tem um documento na coleção users
+          const db = firebase.firestore();
+          const userDoc = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .get();
+
+          if (!userDoc.exists) {
+            // Criar documento de usuário se não existir
+            await db
+              .collection("users")
+              .doc(currentUser.uid)
+              .set({
+                name:
+                  currentUser.displayName || currentUser.email.split("@")[0],
+                email: currentUser.email,
+                role: "admin", // O primeiro usuário é admin por padrão
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+            console.log("Documento de usuário criado com sucesso.");
+          } else {
+            console.log("Documento de usuário já existe.");
+          }
+
+          // Criar uma tarefa de exemplo para testar
+          const taskRef = await db.collection("tasks").add({
+            userId: currentUser.uid,
+            title: "Tarefa de exemplo",
+            description: "Esta é uma tarefa de exemplo criada automaticamente.",
+            responsible: currentUser.displayName || currentUser.email,
+            startDate: new Date().toISOString().split("T")[0], // Data atual no formato YYYY-MM-DD
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0], // Data atual + 7 dias
+            status: "in-progress",
+            completed: false,
+            subtasks: [
+              {
+                id:
+                  Date.now().toString() +
+                  Math.random().toString(36).substr(2, 5),
+                title: "Subtarefa de exemplo",
+                description: "Esta é uma subtarefa de exemplo.",
+                startDate: new Date().toISOString().split("T")[0],
+                endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split("T")[0], // Data atual + 3 dias
+                status: "in-progress",
+                completed: false,
+                communicationType: "enviado",
+              },
+            ],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log("Tarefa de exemplo criada com ID:", taskRef.id);
+          console.log("Configuração do Firestore concluída com sucesso!");
+          console.log(
+            "Agora você pode voltar para a página principal e começar a usar o sistema."
+          );
+        } catch (error) {
+          console.error("Erro ao configurar o Firestore:", error);
         }
-        
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            const setupBtn = document.getElementById('setup-btn');
-            
-            setupBtn.addEventListener('click', () => {
-                // Verificar se o usuário está autenticado
-                firebase.auth().onAuthStateChanged(user => {
-                    if (user) {
-                        // Usuário autenticado, configurar Firestore
-                        setupFirestore();
-                    } else {
-                        console.error('Usuário não autenticado. Faça login primeiro.');
-                        setTimeout(() => {
-                            window.location.href = 'login.html';
-                        }, 2000);
-                    }
-                });
-            });
+      }
+
+      // Event listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        const setupBtn = document.getElementById("setup-btn");
+
+        setupBtn.addEventListener("click", () => {
+          // Verificar se o usuário está autenticado
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              // Usuário autenticado, configurar Firestore
+              setupFirestore();
+            } else {
+              console.error("Usuário não autenticado. Faça login primeiro.");
+              setTimeout(() => {
+                window.location.href = "login.html";
+              }, 2000);
+            }
+          });
         });
+      });
     </script>
-</body>
-</html> 
+  </body>
+</html>
