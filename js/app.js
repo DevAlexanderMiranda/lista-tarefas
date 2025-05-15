@@ -1483,8 +1483,17 @@ function toggleSubtaskComplete(taskId, subtaskId) {
   // Calcular o novo progresso
   const newProgress = calculateProgress(tasks[taskIndex].subtasks);
 
-  // Salvar mudanças e renderizar
-  saveTasks();
+  // Salvar mudanças para o Firestore
+  updateTask(taskId, {
+    subtasks: tasks[taskIndex].subtasks,
+    status: tasks[taskIndex].status,
+    completed: tasks[taskIndex].completed,
+  });
+
+  // Se a visualização de subtarefas estiver aberta, atualizar tudo
+  if (!subtasksView.classList.contains("hidden")) {
+    renderAllSubtasks();
+  }
 
   // Aplicar animação ao progresso
   const taskCard = document.querySelector(`.task-card[data-id="${taskId}"]`);
@@ -1950,9 +1959,17 @@ function createAllSubtaskElement(subtask) {
     statusText = "Sem resposta";
   }
 
+  // Adicionar checkbox para marcar como concluído
+  const isDisabled = subtask.status === "no-response";
+
   element.innerHTML = `
         <div class="all-subtask-header">
-            <span class="all-subtask-title">${subtask.title}</span>
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" class="subtask-check" ${
+                  subtask.completed ? "checked" : ""
+                } ${isDisabled ? "disabled" : ""}>
+                <span class="all-subtask-title">${subtask.title}</span>
+            </div>
             <div style="display: flex; align-items: center;">
                 <span class="all-subtask-parent">${
                   subtask.parentTaskTitle
@@ -2020,6 +2037,25 @@ function createAllSubtaskElement(subtask) {
             : ""
         }
     `;
+
+  // Adicionar event listener para o checkbox
+  const checkbox = element.querySelector(".subtask-check");
+  if (checkbox && !isDisabled) {
+    checkbox.addEventListener("change", () => {
+      const taskId = subtask.parentTaskId;
+      const subtaskId = subtask.id;
+      toggleSubtaskComplete(taskId, subtaskId);
+
+      // Atualizar o elemento visual imediatamente
+      if (checkbox.checked) {
+        element.classList.add("completed");
+        element.classList.remove("in-progress", "partial");
+      } else {
+        element.classList.add("in-progress");
+        element.classList.remove("completed", "partial");
+      }
+    });
+  }
 
   // Adicionar event listeners para os botões de editar e excluir
   const editButton = element.querySelector(".all-subtask-action-btn.edit");

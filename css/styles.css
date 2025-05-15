@@ -1383,3 +1383,16 @@ body.editing-subtask .subtasks-view {
 .all-subtask-item:hover {
   background-color: var(--hover-bg, rgba(0, 0, 0, 0.03));
 }
+
+.all-subtask-item .subtask-check {
+  margin-right: 10px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+}
+
+.all-subtask-item.completed .all-subtask-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
