@@ -456,13 +456,15 @@ function checkDeadlineStatus(endDate, isCompleted = false) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return "red"; // Atrasado (prazo vencido) - mudança para 'red' para mostrar alerta
-  } else if (diffDays <= 1) {
-    return "red"; // Alerta (menos de 2 dias)
+    return "red"; // Atrasado (prazo vencido)
+  } else if (diffDays === 0) {
+    return "red"; // Vence hoje
+  } else if (diffDays === 1) {
+    return "red"; // Vence amanhã
   } else if (diffDays <= 3) {
-    return "yellow"; // Atenção (menos de 3 dias)
+    return "yellow"; // Atenção (3 dias ou menos)
   } else {
-    return "green"; // Normal (mais de 5 dias)
+    return "green"; // Normal (mais de 3 dias)
   }
 }
 
@@ -1725,8 +1727,10 @@ function createDeadlineAlert(item, status, parentTitle = null) {
     }!`;
   } else if (daysLeft === 0) {
     messageText = "vence hoje!";
+  } else if (daysLeft === 1) {
+    messageText = "vence amanhã!";
   } else {
-    messageText = `vence em ${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}`;
+    messageText = `vence em ${daysLeft} dias`;
   }
 
   alertElement.innerHTML = `
