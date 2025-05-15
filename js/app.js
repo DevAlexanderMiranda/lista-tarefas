@@ -456,7 +456,7 @@ function checkDeadlineStatus(endDate, isCompleted = false) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return "late"; // Atrasado
+    return "red"; // Atrasado (prazo vencido) - mudança para 'red' para mostrar alerta
   } else if (diffDays <= 1) {
     return "red"; // Alerta (menos de 2 dias)
   } else if (diffDays <= 3) {
@@ -1710,16 +1710,19 @@ function createDeadlineAlert(item, status, parentTitle = null) {
   alertElement.className = `deadline-alert status-${status}`;
 
   const daysLeft = getDaysLeft(item.endDate);
+  console.log(
+    `Deadline for ${item.title}: ${item.endDate}, Days left: ${daysLeft}`
+  );
+
   const statusText = status === "red" ? "Crítico" : "Atenção";
   const itemType = parentTitle ? "Subtarefa" : "Tarefa";
   const parentInfo = parentTitle ? ` (em "${parentTitle}")` : "";
 
   let messageText;
   if (daysLeft < 0) {
-    messageText =
-      "venceu há " +
-      Math.abs(daysLeft) +
-      ` ${Math.abs(daysLeft) === 1 ? "dia" : "dias"}!`;
+    messageText = `venceu há ${Math.abs(daysLeft)} ${
+      Math.abs(daysLeft) === 1 ? "dia" : "dias"
+    }!`;
   } else if (daysLeft === 0) {
     messageText = "vence hoje!";
   } else {
