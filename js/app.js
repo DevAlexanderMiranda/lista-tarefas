@@ -432,12 +432,24 @@ function checkDeadlineStatus(endDate, isCompleted = false) {
 
   // Se a tarefa estiver concluída, mudar o estilo mas não alertar
   if (isCompleted) {
-    const end = new Date(endDate + "T23:59:59");
+    // Criar data de hoje no início do dia (00:00:00)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Criar data final no início do dia (00:00:00)
+    const dateParts = endDate.split("-");
+    const end = new Date(
+      parseInt(dateParts[0]),
+      parseInt(dateParts[1]) - 1,
+      parseInt(dateParts[2])
+    );
+    end.setHours(0, 0, 0, 0);
+
+    // Calcular diferença em milissegundos
     const diffTime = end - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Converter para dias (1 dia = 24 * 60 * 60 * 1000 ms)
+    const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
 
     if (diffDays < 0) {
       return "completed-late"; // Tarefa concluída com prazo vencido
@@ -447,13 +459,8 @@ function checkDeadlineStatus(endDate, isCompleted = false) {
   }
 
   // Para tarefas não concluídas, manter o comportamento original
-  const end = new Date(endDate + "T23:59:59"); // Define para o final do dia
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Define para o início do dia
-
-  // Calcular a diferença em dias
-  const diffTime = end - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // Usar a função getDaysLeft para garantir consistência
+  const diffDays = getDaysLeft(endDate);
 
   if (diffDays < 0) {
     return "red"; // Atrasado (prazo vencido)
@@ -505,19 +512,31 @@ function formatDeadlineWithStatus(endDate, isCompleted = false) {
 function formatDate(dateString) {
   if (!dateString) return "";
 
-  // Criar nova data no timezone local (sem ajustes de UTC)
-  const dateParts = dateString.split("-");
-  if (dateParts.length !== 3) return "";
+  try {
+    // Criar nova data no timezone local (sem ajustes de UTC)
+    const dateParts = dateString.split("-");
+    if (dateParts.length !== 3) return "";
 
-  // Criando uma data como yyyy/mm/dd para evitar problemas de timezone
-  // Importante: mês em JavaScript é baseado em zero (janeiro = 0)
-  const date = new Date(
-    parseInt(dateParts[0]),
-    parseInt(dateParts[1]) - 1,
-    parseInt(dateParts[2])
-  );
+    // Criando uma data como yyyy/mm/dd para evitar problemas de timezone
+    // Importante: mês em JavaScript é baseado em zero (janeiro = 0)
+    const date = new Date(
+      parseInt(dateParts[0]),
+      parseInt(dateParts[1]) - 1,
+      parseInt(dateParts[2])
+    );
 
-  return date.toLocaleDateString("pt-BR");
+    // Verificar se a data é válida
+    if (isNaN(date.getTime())) {
+      console.error(`Data inválida: ${dateString}`);
+      return "";
+    }
+
+    // Formatar no padrão brasileiro (dd/mm/yyyy)
+    return date.toLocaleDateString("pt-BR");
+  } catch (error) {
+    console.error(`Erro ao formatar data ${dateString}:`, error);
+    return "";
+  }
 }
 
 // Funções de renderização
@@ -1722,8 +1741,9 @@ function createDeadlineAlert(item, status, parentTitle = null) {
 
   let messageText;
   if (daysLeft < 0) {
-    messageText = `venceu há ${Math.abs(daysLeft)} ${
-      Math.abs(daysLeft) === 1 ? "dia" : "dias"
+    const diasAtraso = Math.abs(daysLeft);
+    messageText = `venceu há ${diasAtraso} ${
+      diasAtraso === 1 ? "dia" : "dias"
     }!`;
   } else if (daysLeft === 0) {
     messageText = "vence hoje!";
@@ -1752,12 +1772,29 @@ function createDeadlineAlert(item, status, parentTitle = null) {
 function getDaysLeft(endDate) {
   if (!endDate) return null;
 
-  const end = new Date(endDate + "T23:59:59"); // Define para o final do dia
+  // Criar data de hoje no início do dia (00:00:00)
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Define para o início do dia
+  today.setHours(0, 0, 0, 0);
 
+  // Criar data final no início do dia (00:00:00)
+  const dateParts = endDate.split("-");
+  const end = new Date(
+    parseInt(dateParts[0]),
+    parseInt(dateParts[1]) - 1,
+    parseInt(dateParts[2])
+  );
+  end.setHours(0, 0, 0, 0);
+
+  // Calcular diferença em milissegundos
   const diffTime = end - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Converter para dias (1 dia = 24 * 60 * 60 * 1000 ms)
+  const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+
+  // Debug para verificar cálculos
+  console.log(
+    `Data hoje: ${today.toLocaleDateString()}, Data prazo: ${end.toLocaleDateString()}, Dias restantes: ${diffDays}`
+  );
 
   return diffDays;
 }
