@@ -270,7 +270,7 @@ h1 {
 .progress-value {
   height: 100%;
   background-color: var(--primary-color);
-  transition: width 0.3s ease;
+  transition: width 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .subtasks-list {
@@ -382,6 +382,23 @@ h1 {
   color: #888;
   margin-left: 8px;
   font-style: italic;
+}
+
+/* Estilo para descrição de subtarefas no dashboard */
+.subtask-description {
+  font-size: 12px;
+  color: var(--light-text);
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding-left: 2px;
+  border-left: 2px solid var(--border-color);
+  font-style: italic;
+}
+
+.subtask-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 /* Melhorias visuais para alertas */
@@ -619,11 +636,6 @@ select:focus {
 .subtask-collapsed-badge.partial {
   background-color: #f9a826;
   color: white;
-}
-
-.subtask-content {
-  flex: 1;
-  width: calc(100% - 60px); /* Give enough space for the action buttons */
 }
 
 .subtask-actions {
@@ -880,7 +892,7 @@ select.invalid:focus {
 }
 
 .progress-updating {
-  animation: pulse-progress 0.5s infinite alternate;
+  animation: pulse-progress 0.8s infinite alternate;
 }
 
 @keyframes pulse-progress {

@@ -691,15 +691,22 @@ function createTaskElement(task) {
                         } ${
                       statusDisabled ? "disabled" : ""
                     } data-subtask-id="${subtask.id}">
-                        <span class="subtask-title">
-                            ${subtask.title}
-                            <span class="subtask-collapsed-badge ${communicationType}">${communicationType}</span>
+                        <div class="subtask-content">
+                            <span class="subtask-title">
+                                ${subtask.title}
+                                <span class="subtask-collapsed-badge ${communicationType}">${communicationType}</span>
+                                ${
+                                  subtask.status === "partial"
+                                    ? '<span class="subtask-collapsed-badge partial">Parcial</span>'
+                                    : ""
+                                }
+                            </span>
                             ${
-                              subtask.status === "partial"
-                                ? '<span class="subtask-collapsed-badge partial">Parcial</span>'
+                              subtask.description
+                                ? `<div class="subtask-description">Descrição: ${subtask.description}</div>`
                                 : ""
                             }
-                        </span>
+                        </div>
                         ${
                           subtask.endDate && !isNoResponse
                             ? `
@@ -1039,6 +1046,22 @@ function expandSubtask(element, subtask) {
   const minimizeBtn = expanded.querySelector(".minimize-btn");
   const removeBtn = expanded.querySelector(".remove-btn");
 
+  // Adicionar validação de datas
+  const startDateInput = expanded.querySelector(".subtask-start-date");
+  const endDateInput = expanded.querySelector(".subtask-end-date");
+
+  endDateInput.addEventListener("change", () => {
+    if (startDateInput.value && endDateInput.value) {
+      const startDate = new Date(startDateInput.value);
+      const endDate = new Date(endDateInput.value);
+
+      if (endDate < startDate) {
+        alert("A data de término não pode ser anterior à data de início.");
+        endDateInput.value = startDateInput.value;
+      }
+    }
+  });
+
   // Adicionar event listeners para campos que atualizam automaticamente
   const inputs = expanded.querySelectorAll("input, textarea, select");
   inputs.forEach((input) => {
@@ -1106,22 +1129,7 @@ function expandSubtask(element, subtask) {
           // Se estiver editando uma tarefa, salvar automaticamente após excluir
           if (editingTask && editingTask.id) {
             const updatedSubtasks = getSubtasksFromModal();
-            saveSubtaskChanges(editingTask.id, updatedSubtasks)
-              .then(() => {
-                // Não mostrar mais este indicador
-                // showSaveIndicator('Subtarefa excluída com sucesso!', 'success');
-
-                // Fechar o modal de confirmação automaticamente
-                const confirmModal = document.querySelector(".confirm-modal");
-                if (confirmModal) {
-                  confirmModal.classList.remove("open");
-                }
-              })
-              .catch((error) => {
-                console.error("Erro ao excluir subtarefa:", error);
-                // Não mostrar mais este indicador
-                // showSaveIndicator('Erro ao excluir subtarefa. Por favor, tente novamente.', 'error');
-              });
+            saveSubtaskChanges(editingTask.id, updatedSubtasks);
           }
         }, 280);
       }
@@ -1405,6 +1413,22 @@ function addNewSubtask() {
     const minimizeBtn = subtaskElement.querySelector(".minimize-btn");
     const removeBtn = subtaskElement.querySelector(".remove-btn");
 
+    // Adicionar validação de datas
+    const startDateInput = subtaskElement.querySelector(".subtask-start-date");
+    const endDateInput = subtaskElement.querySelector(".subtask-end-date");
+
+    endDateInput.addEventListener("change", () => {
+      if (startDateInput.value && endDateInput.value) {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        if (endDate < startDate) {
+          alert("A data de término não pode ser anterior à data de início.");
+          endDateInput.value = startDateInput.value;
+        }
+      }
+    });
+
     minimizeBtn.addEventListener("click", () => {
       const tempSubtask = collectSubtaskDataFromExpandedItem(subtaskElement);
 
@@ -1540,46 +1564,26 @@ function toggleSubtaskComplete(taskId, subtaskId) {
         );
         const deadlineSpan = taskDateElement.querySelector("span:last-child");
         if (deadlineSpan) {
-          deadlineSpan.innerHTML = formattedDeadline;
+          deadlineSpan.innerHTML = `Término: ${formattedDeadline}`;
         }
       }
     }
 
     if (progressValue && progressPercent) {
-      // Animar a barra de progresso
-      progressValue.style.transition = "width 0.5s ease-in-out";
-      progressValue.style.width = `${oldProgress}%`;
+      // Garantir que a transição esteja definida antes de alterar o valor
+      progressValue.style.transition = "width 0.8s ease-in-out";
 
-      // Animar o texto do percentual
+      // Atualizar imediatamente o texto do percentual para o novo valor
+      progressPercent.textContent = `${newProgress}%`;
       progressPercent.classList.add("progress-updating");
-      progressPercent.textContent = `${oldProgress}%`;
 
-      // Aguardar um pequeno delay para iniciar a animação
+      // Aplicar a nova largura para iniciar a animação
+      progressValue.style.width = `${newProgress}%`;
+
+      // Remover a classe de animação após a transição terminar
       setTimeout(() => {
-        progressValue.style.width = `${newProgress}%`;
-
-        // Animar o número do percentual
-        let currentPercent = oldProgress;
-        const diff = newProgress - oldProgress;
-        const step = diff > 0 ? 1 : -1;
-        const interval = Math.abs(Math.floor(300 / diff)) || 30; // 300ms total para a animação do número
-
-        if (diff !== 0) {
-          const counter = setInterval(() => {
-            currentPercent += step;
-            progressPercent.textContent = `${currentPercent}%`;
-
-            if (
-              (step > 0 && currentPercent >= newProgress) ||
-              (step < 0 && currentPercent <= newProgress)
-            ) {
-              clearInterval(counter);
-              progressPercent.textContent = `${newProgress}%`;
-              progressPercent.classList.remove("progress-updating");
-            }
-          }, interval);
-        }
-      }, 50);
+        progressPercent.classList.remove("progress-updating");
+      }, 800);
 
       // Atualizar status e badge no card
       const statusBadge = taskCard.querySelector(".task-status-badge");
@@ -2349,6 +2353,18 @@ function handleTaskFormSubmit(e) {
     alert("Por favor, preencha o título da tarefa.");
     taskTitleInput.focus();
     return;
+  }
+
+  // Validar que a data de término não seja anterior à data de início
+  if (taskStartDateInput.value && taskEndDateInput.value) {
+    const startDate = new Date(taskStartDateInput.value);
+    const endDate = new Date(taskEndDateInput.value);
+
+    if (endDate < startDate) {
+      alert("A data de término não pode ser anterior à data de início.");
+      taskEndDateInput.focus();
+      return;
+    }
   }
 
   // Mostrar indicador de loading no botão de salvar
